@@ -1,75 +1,43 @@
-# React + TypeScript + Vite
+# Task Manager with a Reducer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Name: Ebraheem Abokhalil
+Student number: 2300001553
 
-Currently, two official plugins are available:
+A small Task Manager built with React, TypeScript and `useReducer`. State is `{ tasks, filter, past }`. The filtered list and the counts are derived while rendering.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Run it:
 
 ```
+npm install
+npm run dev
+npm run build
+npm test
+```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Bonus 1: Undo
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The state is `{ tasks: Task[]; filter: Filter; past: Task[][] }`. `past` is a stack of earlier task lists, oldest first. Every action that really changes the tasks (add, advance, remove, clearDone) pushes the old list onto `past`, and the `undo` action pops the last list back into `tasks`. Changing the filter does not touch `past`, `undo` with an empty `past` does nothing, and the Undo button is disabled when `past` is empty.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Bonus 2: Tests
+
+Tests are in `src/taskReducer.test.ts` and `src/filter.test.ts` and run with Vitest.
+
+Output of `npm test`:
 
 ```
+PASTE YOUR REAL OUTPUT HERE
+```
+
+## Bonus 3: Explain your reducer
+
+A reducer must be pure because React decides whether to re-render by comparing the old state with the new state by identity. If the reducer pushes into the old array or changes a field of the old object, the "new" state is the same object as the old one, so React sees no change and the screen does not update. It also makes the reducer unpredictable and hard to test, because the same input would no longer always give the same output.
+
+The caller creates the id with crypto.randomUUID() and passes it in the action. A random call inside the reducer would give a different result every time for the same state and action, which breaks purity. React can also run a reducer twice in development to catch impure code, and two runs would create two different ids.
+
+The filtered list and the counts are derived while rendering from state.tasks and state.filter. If I stored them in state, I would have two copies of the same information. For example, with the Done filter on, advancing a task to done would update the tasks but leave a stored filtered list unchanged, so the task would not appear until I clicked the filter again. Deriving them makes this bug impossible.
+
+Moving the filter into the reducer state made some things easier: there is one state object and one dispatch function to pass around, and clearDone and undo keep the filter without extra code. I also decided in one place that setFilter does not touch the undo history. The cost is that even a simple choice like the filter now needs an action type and a case in the switch.
+
+## Bonus 4: Git repository
+
+PASTE YOUR REPOSITORY LINK HERE
